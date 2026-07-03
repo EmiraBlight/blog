@@ -1,0 +1,10 @@
+--- Fetching Comments from Database ---
+Comment {commentId = 1, userId = "UEluFOZrpqPXUsLtjMT7O24Q7yA3", postId = 999, commentText = "This is a test", postTime = 2026-05-27 22:05:54.65228 UTC, userName = "Emira Blight"}
+Comment {commentId = 2, userId = "UEluFOZrpqPXUsLtjMT7O24Q7yA3", postId = 999, commentText = "This is a test", postTime = 2026-05-27 22:05:54.682857 UTC, userName = "Emira Blight"}
+Comment {commentId = 3, userId = "G3QzWiV57VgYwAKbMTa07OaX3ra2", postId = 999, commentText = "wubalubadubdub", postTime = 2026-05-27 22:06:14.900325 UTC, userName = "Sammy Thorne"}
+Comment {commentId = 4, userId = "G3QzWiV57VgYwAKbMTa07OaX3ra2", postId = 1244526811, commentText = "This is the first comment I made on this custom site, Yay!", postTime = 2026-05-27 22:26:33.12038 UTC, userName = "Sammy Thorne"}
+Comment {commentId = 5, userId = "eNc8aSlIX9gRL7EpaqyRi2YubYK2", postId = 1244526811, commentText = "Comment\n", postTime = 2026-05-27 22:31:54.003174 UTC, userName = "Ray Thorne"}
+Comment {commentId = 6, userId = "eNc8aSlIX9gRL7EpaqyRi2YubYK2", postId = 1244526811, commentText = "Comment\n", postTime = 2026-05-27 22:31:54.040261 UTC, userName = "Ray Thorne"}
+Comment {commentId = 7, userId = "G3QzWiV57VgYwAKbMTa07OaX3ra2", postId = 22468339, commentText = "Still working on this!", postTime = 2026-05-27 22:38:07.883265 UTC, userName = "Sammy Thorne"}
+---------------------------------------
+Running on port 8081 with CORS and HTTPS enabled
