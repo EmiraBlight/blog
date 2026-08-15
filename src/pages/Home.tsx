@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { generatePostId } from '../utils/hash';
+import { generatePostId, slugify } from '../utils/hash';
 import { Calendar, ArrowRight, BookOpen, AlertCircle } from 'lucide-react';
 
 interface BlogPost {
@@ -126,7 +126,7 @@ export const Home: React.FC = () => {
 
                 <div className="w-full md:w-3/4 flex flex-col gap-3">
                   <h2 className="text-2xl font-bold text-[var(--text-h)] group-hover:text-[var(--accent)] transition-colors">
-                    <Link to={'/post/' + post.id} state={{ post }}>
+                    <Link to={'/posts/' + slugify(post.title)} state={{ post }}>
                       {post.title}
                     </Link>
                   </h2>
@@ -135,7 +135,7 @@ export const Home: React.FC = () => {
                   </p>
                   <div className="mt-2">
                     <Link
-                      to={'/post/' + post.id}
+                      to={'/posts/' + slugify(post.title)}
                       state={{ post }}
                       className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent)] hover:underline"
                     >

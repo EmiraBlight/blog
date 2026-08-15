@@ -20,7 +20,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
-                <Route path="/post/:postId" element={<PostDetail />} />
+                <Route path="/posts/:slug" element={<PostDetail />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/write" element={<WritePost />} />
                 <Route path="*" element={<Home />} />

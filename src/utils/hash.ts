@@ -5,3 +5,11 @@ export function generatePostId(title: string): number {
   }
   return Math.abs(hash >>> 0);
 }
+
+export function slugify(title: string): string {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}

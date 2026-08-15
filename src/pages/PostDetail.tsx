@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
-import { generatePostId } from '../utils/hash';
+import { generatePostId, slugify } from '../utils/hash';
 import { Comments } from '../components/Comments';
 import { ArrowLeft, Calendar, User, AlertCircle } from 'lucide-react';
 
@@ -13,7 +13,7 @@ interface BlogPost {
 }
 
 export const PostDetail: React.FC = () => {
-  const { postId } = useParams<{ postId: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
 
   const [post, setPost] = useState<BlogPost | null>(() => {
@@ -34,7 +34,6 @@ export const PostDetail: React.FC = () => {
 
   const [error, setError] = useState<string | null>(null);
 
-  const numericPostId = Number(postId);
   const commentsApiUrl = import.meta.env.VITE_COMMENTS_API_URL || 'https://srv915664.hstgr.cloud:8081';
 
   useEffect(() => {
@@ -60,7 +59,7 @@ export const PostDetail: React.FC = () => {
             return { id, title, blurb, content, dateTime };
           });
 
-          const matched = mappedPosts.find((p: BlogPost) => p.id === numericPostId);
+          const matched = mappedPosts.find((p: BlogPost) => slugify(p.title) === slug);
           if (matched) {
             setPost(matched);
           } else {
@@ -78,10 +77,10 @@ export const PostDetail: React.FC = () => {
       }
     };
 
-    if (numericPostId) {
+    if (slug) {
       void fetchAndFindPost();
     }
-  }, [numericPostId, post, commentsApiUrl]);
+  }, [slug, post, commentsApiUrl]);
 
   const renderContent = (text: string) => {
     return text.split('\n').map((paragraph, index) => {
@@ -158,7 +157,7 @@ export const PostDetail: React.FC = () => {
             )}
           </div>
 
-          <Comments postId={numericPostId} />
+          <Comments postId={post.id} />
         </article>
       ) : null}
     </div>
