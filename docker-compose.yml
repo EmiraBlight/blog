@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: test_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - blog_db_data:/var/lib/postgresql/data
+      - ./backend/migration.sql:/docker-entrypoint-initdb.d/01-migration.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: test_db
+      PORT: "8081"
+      USE_TLS: "false"
+    ports:
+      - "8081:8081"
+
+  frontend:
+    build: .
+    depends_on:
+      - backend
+    environment:
+      VITE_COMMENTS_API_URL: http://localhost:8081
+      VITE_POSTS_API_URL: http://localhost:8081
+      VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+
+volumes:
+  blog_db_data:

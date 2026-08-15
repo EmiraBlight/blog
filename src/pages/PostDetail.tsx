@@ -5,6 +5,7 @@ import { Comments } from '../components/Comments';
 import { ArrowLeft, Calendar, User, AlertCircle } from 'lucide-react';
 
 interface BlogPost {
+  id: number;
   title: string;
   blurb: string;
   dateTime: string;
@@ -14,31 +15,52 @@ interface BlogPost {
 export const PostDetail: React.FC = () => {
   const { postId } = useParams<{ postId: string }>();
   const location = useLocation();
-  const [post, setPost] = useState<BlogPost | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+
+  const [post, setPost] = useState<BlogPost | null>(() => {
+    const locState = location.state as { post?: BlogPost } | null;
+    if (locState && locState.post) {
+      return locState.post;
+    }
+    return null;
+  });
+
+  const [loading, setLoading] = useState<boolean>(() => {
+    const locState = location.state as { post?: BlogPost } | null;
+    if (locState && locState.post) {
+      return false;
+    }
+    return true;
+  });
+
   const [error, setError] = useState<string | null>(null);
 
   const numericPostId = Number(postId);
-  const postsApiUrl = import.meta.env.VITE_POSTS_API_URL || 'https://srv915664.hstgr.cloud:8000';
+  const commentsApiUrl = import.meta.env.VITE_COMMENTS_API_URL || 'https://srv915664.hstgr.cloud:8081';
 
   useEffect(() => {
-    if (location.state && (location.state as any).post) {
-      setPost((location.state as any).post);
-      setLoading(false);
-      return;
-    }
+    if (post) return; // already initialized from location state
 
     const fetchAndFindPost = async () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(postsApiUrl + '/blogs.json');
+        const res = await fetch(commentsApiUrl + '/posts');
         if (!res.ok) {
           throw new Error('Failed to retrieve blogs from database.');
         }
-        const data = await res.json();
+        const data = (await res.json()) as unknown[];
         if (Array.isArray(data)) {
-          const matched = data.find((p: BlogPost) => generatePostId(p.title) === numericPostId);
+          const mappedPosts = data.map((p: unknown) => {
+            const item = p as Record<string, unknown>;
+            const title = (item.pTitle || item.title || '') as string;
+            const id = (item.pId || item.id || generatePostId(title)) as number;
+            const blurb = (item.pBlurb || item.blurb || '') as string;
+            const content = (item.pContent || item.content || '') as string;
+            const dateTime = (item.pDateTime || item.dateTime || '') as string;
+            return { id, title, blurb, content, dateTime };
+          });
+
+          const matched = mappedPosts.find((p: BlogPost) => p.id === numericPostId);
           if (matched) {
             setPost(matched);
           } else {
@@ -47,18 +69,19 @@ export const PostDetail: React.FC = () => {
         } else {
           throw new Error('Invalid format returned by the blog database.');
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
         console.error('Error retrieving blog post details:', err);
-        setError(err.message || 'Error loading blog post.');
+        setError(errorMsg || 'Error loading blog post.');
       } finally {
         setLoading(false);
       }
     };
 
     if (numericPostId) {
-      fetchAndFindPost();
+      void fetchAndFindPost();
     }
-  }, [numericPostId, location.state]);
+  }, [numericPostId, post, commentsApiUrl]);
 
   const renderContent = (text: string) => {
     return text.split('\n').map((paragraph, index) => {

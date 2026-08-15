@@ -4,10 +4,25 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Search, Menu, X, LogOut, BookOpen, Sun, Moon, Laptop } from 'lucide-react';
 
-declare const google: any;
+interface GoogleAuthResponse {
+  credential: string;
+}
+
+interface GoogleAuthClient {
+  initialize: (config: { client_id: string; callback: (response: GoogleAuthResponse) => void }) => void;
+  renderButton: (element: HTMLElement | null, options: { theme: string; size: string; shape: string }) => void;
+}
+
+interface GoogleIdentityServices {
+  accounts: {
+    id: GoogleAuthClient;
+  };
+}
+
+declare const google: GoogleIdentityServices | undefined;
 
 export const Navbar: React.FC = () => {
-  const { user, signIn, signOut } = useAuth();
+  const { user, signIn, signOut, isAdmin, isModerator, isWriter } = useAuth();
   const { theme, setTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
@@ -23,16 +38,14 @@ export const Navbar: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!user && typeof google !== 'undefined') {
+    if (!user && typeof google !== 'undefined' && google) {
       try {
         google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '1035659837943-dummy.apps.googleusercontent.com',
-          callback: async (response: any) => {
-            try {
-              await signIn(response.credential);
-            } catch (err) {
+          callback: (response: GoogleAuthResponse) => {
+            void signIn(response.credential).catch((err: unknown) => {
               console.error('Google Auth login failed:', err);
-            }
+            });
           },
         });
         
@@ -44,7 +57,7 @@ export const Navbar: React.FC = () => {
         console.error('Error initializing Google Identity Services:', err);
       }
     }
-  }, [user]);
+  }, [user, signIn]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -75,6 +88,16 @@ export const Navbar: React.FC = () => {
             <Link to="/about" className={'hover:text-[var(--accent)] transition-colors ' + (location.pathname === '/about' ? 'text-[var(--accent)]' : 'text-[var(--text)]')}>
               About
             </Link>
+            {(isAdmin || isModerator) && (
+              <Link to="/admin" className={'hover:text-[var(--accent)] transition-colors ' + (location.pathname === '/admin' ? 'text-[var(--accent)]' : 'text-[var(--text)]')}>
+                Admin
+              </Link>
+            )}
+            {isWriter && (
+              <Link to="/write" className={'hover:text-[var(--accent)] transition-colors ' + (location.pathname === '/write' ? 'text-[var(--accent)]' : 'text-[var(--text)]')}>
+                Write
+              </Link>
+            )}
           </div>
 
           <div className="relative flex-grow">
@@ -150,6 +173,24 @@ export const Navbar: React.FC = () => {
             >
               About
             </Link>
+            {(isAdmin || isModerator) && (
+              <Link
+                to="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className={'py-2 px-3 rounded hover:bg-[var(--code-bg)] transition-colors ' + (location.pathname === '/admin' ? 'text-[var(--accent)] bg-[var(--accent-bg)]' : 'text-[var(--text)]')}
+              >
+                Admin
+              </Link>
+            )}
+            {isWriter && (
+              <Link
+                to="/write"
+                onClick={() => setMobileMenuOpen(false)}
+                className={'py-2 px-3 rounded hover:bg-[var(--code-bg)] transition-colors ' + (location.pathname === '/write' ? 'text-[var(--accent)] bg-[var(--accent-bg)]' : 'text-[var(--text)]')}
+              >
+                Write
+              </Link>
+            )}
           </div>
 
           <div className="relative mx-3">

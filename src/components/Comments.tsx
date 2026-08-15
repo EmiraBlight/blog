@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { MessageSquare, Send, ShieldAlert } from 'lucide-react';
+import { MessageSquare, Send, ShieldAlert, Trash2 } from 'lucide-react';
 
 interface Comment {
   commentId: number;
@@ -16,7 +16,7 @@ interface CommentsProps {
 }
 
 export const Comments: React.FC<CommentsProps> = ({ postId }) => {
-  const { user, token } = useAuth();
+  const { user, token, isModerator } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +25,7 @@ export const Comments: React.FC<CommentsProps> = ({ postId }) => {
 
   const commentsApiUrl = import.meta.env.VITE_COMMENTS_API_URL || 'https://srv915664.hstgr.cloud:8081';
 
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -33,21 +33,22 @@ export const Comments: React.FC<CommentsProps> = ({ postId }) => {
       if (!res.ok) {
         throw new Error('Failed to retrieve comments.');
       }
-      const data = await res.json();
+      const data = (await res.json()) as Comment[];
       setComments(Array.isArray(data) ? data : []);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
       console.error('Comments fetching error:', err);
-      setError(err.message || 'Error loading comments.');
+      setError(errorMsg || 'Error loading comments.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [postId, commentsApiUrl]);
 
   useEffect(() => {
     if (postId) {
-      fetchComments();
+      void fetchComments();
     }
-  }, [postId]);
+  }, [postId, fetchComments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,11 +80,38 @@ export const Comments: React.FC<CommentsProps> = ({ postId }) => {
 
       setNewComment('');
       await fetchComments();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
       console.error('Comment post error:', err);
-      setError(err.message || 'Error posting comment.');
+      setError(errorMsg || 'Error posting comment.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (commentId: number) => {
+    if (!token) return;
+    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+
+    try {
+      setError(null);
+      const res = await fetch(commentsApiUrl + '/comments/' + commentId, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+        },
+      });
+
+      if (!res.ok) {
+        const errBody = await res.text();
+        throw new Error('Failed to delete comment: ' + (errBody || res.statusText));
+      }
+
+      await fetchComments();
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error('Comment deletion error:', err);
+      setError(errorMsg || 'Error deleting comment.');
     }
   };
 
@@ -98,7 +126,7 @@ export const Comments: React.FC<CommentsProps> = ({ postId }) => {
         hour: '2-digit',
         minute: '2-digit',
       });
-    } catch (e) {
+    } catch {
       return dateStr;
     }
   };
@@ -175,9 +203,20 @@ export const Comments: React.FC<CommentsProps> = ({ postId }) => {
                   <h4 className="text-sm font-semibold text-[var(--text-h)]">
                     {comment.userName}
                   </h4>
-                  <span className="text-[11px] text-[var(--text)]">
-                    {formatDate(comment.postTime)}
-                  </span>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-[11px] text-[var(--text)]">
+                      {formatDate(comment.postTime)}
+                    </span>
+                    {isModerator && (
+                      <button
+                        onClick={() => handleDelete(comment.commentId)}
+                        className="text-red-500 hover:text-red-600 transition-colors cursor-pointer p-0.5 rounded flex items-center justify-center"
+                        title="Delete Comment"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <p className="text-sm text-[var(--text-h)] whitespace-pre-wrap break-words leading-relaxed">
                   {comment.commentText}

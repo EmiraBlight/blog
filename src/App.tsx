@@ -5,6 +5,8 @@ import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
 import { About } from './pages/About';
 import { PostDetail } from './pages/PostDetail';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { WritePost } from './pages/WritePost';
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/post/:postId" element={<PostDetail />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/write" element={<WritePost />} />
                 <Route path="*" element={<Home />} />
               </Routes>
             </main>

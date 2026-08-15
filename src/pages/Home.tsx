@@ -4,11 +4,14 @@ import { generatePostId } from '../utils/hash';
 import { Calendar, ArrowRight, BookOpen, AlertCircle } from 'lucide-react';
 
 interface BlogPost {
+  id: number;
   title: string;
   blurb: string;
   dateTime: string;
   content?: string;
 }
+
+const COMMENTS_API_URL = import.meta.env.VITE_COMMENTS_API_URL || 'https://srv915664.hstgr.cloud:8081';
 
 export const Home: React.FC = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -17,28 +20,57 @@ export const Home: React.FC = () => {
   const [searchParams] = useSearchParams();
 
   const searchQuery = searchParams.get('q') || '';
-  const postsApiUrl = import.meta.env.VITE_POSTS_API_URL || 'https://srv915664.hstgr.cloud:8000';
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(postsApiUrl + '/blogs.json');
+        const res = await fetch(COMMENTS_API_URL + '/posts');
         if (!res.ok) {
           throw new Error('Failed to retrieve blog posts.');
         }
-        const data = await res.json();
-        setPosts(Array.isArray(data) ? data : []);
-      } catch (err: any) {
+        const data = (await res.json()) as unknown[];
+        
+        if (Array.isArray(data)) {
+          const mappedPosts = data.map((p: unknown) => {
+            const item = p as Record<string, unknown>;
+            const title = (item.pTitle || item.title || '') as string;
+            const id = (item.pId || item.id || generatePostId(title)) as number;
+            const blurb = (item.pBlurb || item.blurb || '') as string;
+            const content = (item.pContent || item.content || '') as string;
+            const dateTime = (item.pDateTime || item.dateTime || '') as string;
+
+            let formattedDate = dateTime;
+            try {
+              const d = new Date(dateTime);
+              if (!isNaN(d.getTime())) {
+                formattedDate = d.toLocaleDateString(undefined, {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric'
+                });
+              }
+            } catch {
+              // ignore
+            }
+
+            return { id, title, blurb, content, dateTime: formattedDate };
+          });
+          setPosts(mappedPosts);
+        } else {
+          setPosts([]);
+        }
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
         console.error('Error fetching blog posts:', err);
-        setError(err.message || 'Error loading blog posts.');
+        setError(errorMsg || 'Error loading blog posts.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPosts();
+    void fetchPosts();
   }, []);
 
   const filteredPosts = posts.filter((post) => {
@@ -82,10 +114,9 @@ export const Home: React.FC = () => {
       ) : (
         <div className="space-y-12">
           {filteredPosts.map((post) => {
-            const postId = generatePostId(post.title);
             return (
               <article
-                key={postId}
+                key={post.id}
                 className="group border-b border-[var(--border)] pb-10 flex flex-col md:flex-row gap-6 md:gap-12 items-baseline text-left"
               >
                 <div className="w-full md:w-1/4 flex-shrink-0 flex items-center gap-2 text-sm text-[var(--text)] font-medium">
@@ -95,7 +126,7 @@ export const Home: React.FC = () => {
 
                 <div className="w-full md:w-3/4 flex flex-col gap-3">
                   <h2 className="text-2xl font-bold text-[var(--text-h)] group-hover:text-[var(--accent)] transition-colors">
-                    <Link to={'/post/' + postId} state={{ post }}>
+                    <Link to={'/post/' + post.id} state={{ post }}>
                       {post.title}
                     </Link>
                   </h2>
@@ -104,7 +135,7 @@ export const Home: React.FC = () => {
                   </p>
                   <div className="mt-2">
                     <Link
-                      to={'/post/' + postId}
+                      to={'/post/' + post.id}
                       state={{ post }}
                       className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent)] hover:underline"
                     >
