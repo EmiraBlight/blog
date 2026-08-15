@@ -83,32 +83,61 @@ export const PostDetail: React.FC = () => {
   }, [slug, post, commentsApiUrl]);
 
   const renderContent = (text: string) => {
-    return text.split('\n').map((paragraph, index) => {
-      if (!paragraph.trim()) return null;
-      
-      const parts = paragraph.split(/([\u0060][^\u0060]+[\u0060])/g);
-      const contentParts = parts.map((part, pIdx) => {
-        const tick = String.fromCharCode(96);
-        if (part.startsWith(tick) && part.endsWith(tick)) {
-          return (
-            <code key={pIdx} className="bg-[var(--code-bg)] px-1.5 py-0.5 rounded text-sm text-[var(--accent)] font-mono border border-[var(--border)] font-medium">
-              {part.slice(1, -1)}
+    const normalized = text.replace(/\r\n/g, '\n');
+    const tokens = normalized.split(/([\u0060][^\u0060]*[\u0060])/g).filter((t) => t !== '');
+
+    const elements: React.ReactNode[] = [];
+    let currentLine: React.ReactNode[] = [];
+    let key = 0;
+
+    const flushLine = () => {
+      const hasContent = currentLine.some((n) => (typeof n === 'string' ? n.trim() : true));
+      if (hasContent) {
+        elements.push(
+          <p key={key++} className="mb-6 leading-relaxed text-[var(--text)] text-base md:text-lg whitespace-pre-wrap">
+            {currentLine}
+          </p>
+        );
+      }
+      currentLine = [];
+    };
+
+    tokens.forEach((token) => {
+      const tick = String.fromCharCode(96);
+      const isCode = token.startsWith(tick) && token.endsWith(tick) && token.length >= 2;
+
+      if (isCode) {
+        const codeText = token.slice(1, -1);
+        if (codeText.includes('\n')) {
+          flushLine();
+          elements.push(
+            <pre key={key++} className="mb-6 p-4 rounded-lg bg-[var(--code-bg)] border border-[var(--border)] overflow-x-auto text-sm">
+              <code className="font-mono text-[var(--text-h)]">
+                {codeText.replace(/^\n/, '').replace(/\n$/, '')}
+              </code>
+            </pre>
+          );
+        } else {
+          currentLine.push(
+            <code key={key++} className="bg-[var(--code-bg)] px-1.5 py-0.5 rounded text-sm text-[var(--accent)] font-mono border border-[var(--border)] font-medium">
+              {codeText}
             </code>
           );
         }
-        return part;
-      });
-
-      return (
-        <p key={index} className="mb-6 leading-relaxed text-[var(--text)] text-base md:text-lg">
-          {contentParts}
-        </p>
-      );
+      } else {
+        token.split('\n').forEach((line, idx) => {
+          if (idx > 0) flushLine();
+          if (line) currentLine.push(line);
+        });
+      }
     });
+    flushLine();
+
+    return elements;
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-6">
+    <div className="w-[92%] max-w-[1600px] mx-auto py-12 px-6">
       <div className="mb-8 text-left">
         <Link
           to="/"
@@ -131,7 +160,7 @@ export const PostDetail: React.FC = () => {
           <p className="text-sm text-[var(--text)]">{error}</p>
         </div>
       ) : post ? (
-        <article className="text-left">
+        <article className="text-left max-w-4xl mx-auto">
           <header className="mb-10 pb-8 border-b border-[var(--border)]">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[var(--text-h)] tracking-tight mb-6 leading-tight">
               {post.title}

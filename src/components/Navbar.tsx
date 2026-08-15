@@ -74,7 +74,7 @@ export const Navbar: React.FC = () => {
 
   return (
     <nav className="border-b border-[var(--border)] bg-[var(--bg)] py-4 px-6 sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+      <div className="w-[92%] max-w-[1600px] mx-auto flex items-center justify-between gap-4">
         <Link to="/" className="flex items-center gap-2 font-semibold text-xl tracking-tight text-[var(--text-h)] hover:opacity-85 transition-opacity">
           <BookOpen className="w-5 h-5 text-[var(--accent)]" />
           <span>dev-crypt</span>

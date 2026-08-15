@@ -16,7 +16,7 @@ function App() {
           <div className="flex flex-col min-h-screen bg-[var(--bg)] text-[var(--text)] transition-colors duration-300">
             <Navbar />
             
-            <main className="flex-grow max-w-5xl w-full mx-auto">
+            <main className="flex-grow w-full">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
@@ -28,9 +28,8 @@ function App() {
             </main>
 
             <footer className="border-t border-[var(--border)] py-6 text-center text-xs text-[var(--text)]">
-              <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-2">
+              <div className="w-[92%] max-w-[1600px] mx-auto px-6">
                 <span>&copy; {new Date().getFullYear()} dev-crypt. All rights reserved.</span>
-                <span className="opacity-75">Built with React 19, Vite, and Tailwind CSS.</span>
               </div>
             </footer>
           </div>

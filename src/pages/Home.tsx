@@ -82,7 +82,7 @@ export const Home: React.FC = () => {
   });
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-6">
+    <div className="w-[92%] max-w-[1600px] mx-auto py-12 px-6">
       <div className="mb-12 text-center md:text-left">
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[var(--text-h)] mb-4">
           Latest Publications
@@ -130,7 +130,7 @@ export const Home: React.FC = () => {
                       {post.title}
                     </Link>
                   </h2>
-                  <p className="text-[var(--text)] leading-relaxed text-base">
+                  <p className="text-[var(--text)] leading-relaxed text-base max-w-2xl">
                     {post.blurb}
                   </p>
                   <div className="mt-2">

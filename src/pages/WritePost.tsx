@@ -165,6 +165,19 @@ export const WritePost: React.FC = () => {
                 rows={12}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const target = e.currentTarget;
+                    const start = target.selectionStart;
+                    const end = target.selectionEnd;
+                    const next = content.slice(0, start) + '\t' + content.slice(end);
+                    setContent(next);
+                    requestAnimationFrame(() => {
+                      target.selectionStart = target.selectionEnd = start + 1;
+                    });
+                  }
+                }}
                 placeholder="Write your article content here..."
                 className="w-full bg-[var(--bg)] text-[var(--text-h)] text-sm rounded-lg p-4 border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors font-sans resize-y"
                 required
